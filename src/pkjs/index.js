@@ -6,6 +6,10 @@
 var Clay = require('@rebble/clay');
 var config = require('./config');
 
+// Hilfsmodul von Alloy: beantwortet das "Bereit?"-Signal der Uhr.
+// Erst danach darf die Uhr Nachrichten senden.
+var moddableProxy = require('@moddable/pebbleproxy');
+
 // autoHandleEvents: false = wir öffnen und schließen die Seite selbst,
 // damit wir die Seite mit den gefundenen Namen bauen und nach dem
 // Speichern die Haltestellen suchen können.
@@ -39,11 +43,31 @@ function speichereVerbindungen(liste) {
   localStorage.setItem('verbindungen', JSON.stringify(liste));
 }
 
-// Nur die gefundenen Verbindungen, mit Anzeigename (für die Uhr)
+// Nur die gefundenen Verbindungen. Die Uhr kennt nur diese Liste,
+// "REQUEST: i" meint also den i-ten Eintrag hier.
+function gefundeneVerbindungen() {
+  return ladeVerbindungen().filter(function (v) { return v && v.ok; });
+}
+
+// Anzeigenamen für die Uhr
 function anzeigeNamen() {
-  return ladeVerbindungen()
-    .filter(function (v) { return v && v.ok; })
-    .map(function (v) { return v.startName + ' → ' + v.zielName; });
+  return gefundeneVerbindungen().map(function (v) {
+    return v.startName + ' → ' + v.zielName;
+  });
+}
+
+// ---------- Nachrichten an die Uhr ----------
+
+function sendeAnUhr(paket) {
+  Pebble.sendAppMessage(paket, function () {
+    console.log('An die Uhr gesendet: ' + JSON.stringify(paket));
+  }, function () {
+    console.log('Senden an die Uhr fehlgeschlagen (App auf der Uhr offen?)');
+  });
+}
+
+function sendeNamen() {
+  sendeAnUhr({ NAMEN: JSON.stringify(anzeigeNamen()) });
 }
 
 // ---------- Netzwerk ----------
@@ -111,9 +135,7 @@ Pebble.addEventListener('webviewclosed', function (e) {
 
   loeseAuf(eingaben, function (liste) {
     speichereVerbindungen(liste);
-    console.log('Gespeichert. Anzeigenamen für die Uhr:');
-    console.log(JSON.stringify(anzeigeNamen()));
-    // Schritt 3: hier die Anzeigenamen an die Uhr senden
+    sendeNamen();
   });
 });
 
@@ -180,7 +202,7 @@ function verspaetungMinuten(soll, ist) {
   return Math.round((new Date(ist) - new Date(soll)) / 60000);
 }
 
-// Macht aus einer Transitous-Verbindung ein kleines Objekt.
+// Macht aus einer Transitous-Verbindung ein kleines Objekt für die Uhr.
 // Fußwege (WALK) am Anfang/Ende werden übersprungen.
 function kurzfassung(itinerary) {
   var fahrten = itinerary.legs.filter(function (leg) {
@@ -190,14 +212,11 @@ function kurzfassung(itinerary) {
     return null;
   }
   var erste = fahrten[0];
-  var letzte = fahrten[fahrten.length - 1];
   return {
     ab: uhrzeit(erste.from.scheduledDeparture),
-    an: uhrzeit(letzte.to.arrival),
     linie: erste.routeShortName || erste.mode,
     gleis: erste.from.track || erste.from.scheduledTrack || '',
-    plus: verspaetungMinuten(erste.from.scheduledDeparture, erste.from.departure),
-    echtzeit: !!erste.realTime
+    plus: verspaetungMinuten(erste.from.scheduledDeparture, erste.from.departure)
   };
 }
 
@@ -234,27 +253,35 @@ function holeFahrplan(startId, zielId, callback) {
 
 Pebble.addEventListener('ready', function () {
   console.log('Von A nach B: Handy-Teil bereit');
+  moddableProxy.readyReceived();
+});
 
-  // Test: erste gefundene Verbindung aus den Einstellungen abfragen
-  var erste = ladeVerbindungen().filter(function (v) { return v && v.ok; })[0];
-  if (!erste) {
-    console.log('Noch keine Verbindungen gespeichert – bitte Einstellungen öffnen.');
+// Anfrage von der Uhr: { REQUEST: i }
+Pebble.addEventListener('appmessage', function (e) {
+  if (moddableProxy.appMessageReceived(e)) {
+    return; // war eine interne Alloy-Nachricht
+  }
+  var i = e.payload.REQUEST;
+  if (typeof i !== 'number') {
     return;
   }
-  console.log('Test: ' + erste.startName + ' → ' + erste.zielName);
-
-  holeFahrplan(erste.startId, erste.zielId, function (code, liste) {
-    if (code === FEHLER_KEINE_VERBINDUNG) {
-      console.log('Keine Verbindung gefunden');
-      return;
-    }
-    if (code === FEHLER_NETZ) {
-      console.log('Kein Netz / API-Fehler');
-      return;
-    }
-    liste.forEach(function (v) {
-      var plus = v.plus > 0 ? ' +' + v.plus : '';
-      console.log(v.ab + plus + ' -> ' + v.an + '  ' + v.linie + '  Gl. ' + v.gleis);
+  var v = gefundeneVerbindungen()[i];
+  if (!v) {
+    // Die Liste auf der Uhr ist veraltet: neue Liste mitschicken.
+    console.log('Verbindung ' + i + ' gibt es nicht');
+    sendeAnUhr({
+      NAMEN: JSON.stringify(anzeigeNamen()),
+      FEHLER: FEHLER_KEINE_VERBINDUNG
     });
+    return;
+  }
+  console.log('Uhr fragt: ' + v.startName + ' → ' + v.zielName);
+
+  holeFahrplan(v.startId, v.zielId, function (code, liste) {
+    if (code !== 0) {
+      sendeAnUhr({ FEHLER: code });
+      return;
+    }
+    sendeAnUhr({ FEHLER: 0, FAHRTEN: JSON.stringify(liste) });
   });
 });

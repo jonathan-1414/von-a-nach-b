@@ -59,13 +59,13 @@ nur ein kleines, fertiges Paket. Die vollständige Transitous-Antwort kommt nie 
 2. Transitous `plan`: fromPlace, toPlace, Zeit = jetzt, ohne Umstieg.
 3. Eigenen User-Agent setzen: `xhr.setRequestHeader('User-Agent', 'VonAnachB/0.1 (Pebble)')`.
    Die aktuelle Pebble-App gibt gesetzte Header ungefiltert weiter.
-4. Antwort ok und Verbindungen vorhanden: für die ersten 3 Verbindungen Abfahrt Soll/Ist, Ankunft,
+4. Antwort ok und Verbindungen vorhanden: für die ersten 3 Verbindungen Abfahrt Soll/Ist,
    Linie, Gleis auslesen, Verspätung in Minuten berechnen, kompaktes Paket an die Uhr senden.
 5. Keine Verbindungen: Code „keine Verbindung gefunden“. HTTP-/Netzfehler: Code „kein Netz / API-Fehler“.
 
 ### 3c. Ergebnis anzeigen (Uhr, `onReadable()`)
 1. Timeout stoppen, Ladeanzeige ausblenden.
-2. Fehlercode: passende Meldung. Sonst je Verbindung eine Zeile: Abfahrt, Ankunft, Linie, Gleis,
+2. Fehlercode: passende Meldung. Sonst je Verbindung eine Zeile: Abfahrt, Linie, Gleis,
    Verspätung (z. B. `+3`).
 3. **Keine** Anzeige „in X min“.
 4. Idee, noch offen: mittlere Taste (Select) in der geöffneten Verbindung = Aktualisieren (erneut 3a).
