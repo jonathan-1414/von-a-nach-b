@@ -1,7 +1,7 @@
 // Handy-Teil (PebbleKit JS).
-// Schritt 2: Einstellungen (Clay) speichern, Haltestellen per geocode auflösen.
-// Zum Testen wird beim Start die erste gespeicherte Verbindung abgefragt
-// und das Ergebnis in der Konsole ausgegeben.
+// - Einstellungen (Clay) speichern, Haltestellen per Transitous geocode auflösen
+// - Namensliste an die Uhr schicken (nach dem Speichern und bei jedem App-Start)
+// - Fahrplan-Anfragen der Uhr beantworten (Transitous plan)
 
 var Clay = require('@rebble/clay');
 var config = require('./config');
@@ -18,7 +18,8 @@ var moddableProxy = require('@moddable/pebbleproxy');
 var clay = new Clay(config.baueConfig([]), null, { autoHandleEvents: false });
 
 var API = 'https://api.transitous.org/api';
-var USER_AGENT = 'VonAnachB/0.1 (Pebble)';
+// Transitous verlangt App-Name, Version und eine Kontaktmöglichkeit.
+var USER_AGENT = 'VonAnachB/1.0.0 (Pebble; +https://github.com/jonathan-1414/von-a-nach-b)';
 
 // Fehlercodes (später auch für die Uhr)
 var FEHLER_KEINE_VERBINDUNG = 1;
@@ -58,8 +59,10 @@ function anzeigeNamen() {
 
 // ---------- Nachrichten an die Uhr ----------
 
+// Über die Warteschlange des Alloy-Hilfsmoduls senden: so gehen Nachrichten
+// nacheinander raus und kollidieren nicht mit dessen "Bereit"-Nachricht.
 function sendeAnUhr(paket) {
-  Pebble.sendAppMessage(paket, function () {
+  moddableProxy.sendAppMessage(paket, function () {
     console.log('An die Uhr gesendet: ' + JSON.stringify(paket));
   }, function () {
     console.log('Senden an die Uhr fehlgeschlagen (App auf der Uhr offen?)');
@@ -270,6 +273,9 @@ function holeFahrplan(startId, zielId, callback) {
 Pebble.addEventListener('ready', function () {
   console.log('Von A nach B: Handy-Teil bereit');
   moddableProxy.readyReceived();
+  // Namensliste bei jedem Start schicken, damit die Uhr aktuell ist,
+  // auch wenn die App beim Speichern der Einstellungen nicht offen war.
+  sendeNamen();
 });
 
 // Anfrage von der Uhr: { REQUEST: i }

@@ -234,8 +234,9 @@ const message = new Message({
 	onReadable() {
 		const msg = this.read();
 
-		// Neue Liste der Verbindungen (nach dem Speichern der Einstellungen)
-		if (msg.has("NAMEN")) {
+		// Liste der Verbindungen (beim Start und nach dem Speichern der Einstellungen).
+		// Nur neu aufbauen, wenn sich etwas geändert hat.
+		if (msg.has("NAMEN") && msg.get("NAMEN") !== localStorage.getItem("namen")) {
 			localStorage.setItem("namen", msg.get("NAMEN"));
 			namen = ladeNamen();
 			auswahl = Math.min(auswahl, Math.max(0, namen.length - 1));

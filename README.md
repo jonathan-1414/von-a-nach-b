@@ -2,9 +2,10 @@
 
 Pebble-App für die **Pebble Time 2** (Plattform `emery`). Sie zeigt für gespeicherte Bahnverbindungen
 die nächsten drei Abfahrten mit Echtzeitdaten: Abfahrtszeit, Verspätung, Linie und Gleis.
-Die Fahrplandaten kommen von [Transitous](https://transitous.org).
+Die Fahrplandaten kommen von [Transitous](https://transitous.org)
+([Datenquellen](https://transitous.org/sources/), Kartendaten © OpenStreetMap-Mitwirkende).
 
-![Liste der Verbindungen](screenshots/liste.png) ![Detailansicht Köln Hbf nach Köln-Mülheim](screenshots/detail.png)
+![Liste der Verbindungen](screenshots/emery_liste.png) ![Detailansicht Köln Hbf nach Köln-Mülheim](screenshots/emery_detail.png)
 
 ## Bedienung
 
@@ -22,8 +23,9 @@ S-Bahn grün, Bus violett, U-Bahn blau, Tram gelb, andere Züge rot.
 Die Uhr zeigt nur an, alle Netzwerkzugriffe macht das Handy.
 
 1. **Speichern der Einstellungen:** Das Handy sucht Start und Ziel über die Transitous-API (`geocode`),
-   merkt sich die Haltestellen und schickt die Namen der Verbindungen an die Uhr.
-   Die Uhr speichert sie, damit die Liste auch ohne Handy sofort erscheint.
+   merkt sich die Haltestellen und schickt die Namen der Verbindungen an die Uhr
+   (zusätzlich bei jedem App-Start). Die Uhr speichert sie, damit die Liste auch ohne Handy
+   sofort erscheint.
 2. **Auswahl einer Verbindung:** Die Uhr fragt beim Handy an. Das Handy ruft Transitous (`plan`) ab
    und schickt ein kleines Paket mit den drei nächsten Abfahrten zurück.
 3. **Fehler** werden auf der Uhr angezeigt: kein Handy verbunden, kein Netz, keine Verbindung gefunden.
@@ -42,9 +44,6 @@ pebble install --emulator emery --logs     # im Emulator
 pebble emu-app-config --emulator emery     # Einstellungen im Emulator öffnen
 pebble install --phone <IP> --logs         # auf die Uhr (Entwicklerverbindung in der Pebble-App)
 ```
-
-**Hinweis:** Die Namensliste kommt nur auf der Uhr an, wenn die App beim Speichern
-der Einstellungen auf der Uhr geöffnet ist.
 
 ## Lizenz
 

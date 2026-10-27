@@ -37,6 +37,13 @@ function baueConfig(gefunden) {
     config.push({ type: 'section', items: items });
   }
 
+  // Von Transitous verlangter Hinweis auf die Datenquellen
+  config.push({
+    type: 'text',
+    defaultValue: 'Fahrplandaten: <a href="https://transitous.org">Transitous</a> ' +
+      '(<a href="https://transitous.org/sources/">Datenquellen</a>), ' +
+      'Kartendaten © OpenStreetMap-Mitwirkende.'
+  });
   config.push({ type: 'submit', defaultValue: 'Speichern' });
   return config;
 }
