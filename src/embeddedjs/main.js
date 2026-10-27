@@ -1,32 +1,34 @@
-import Poco from "commodetto/Poco";
 import Message from "pebble/message";
 
-// Schritt 3: Nachrichten Uhr <-> Handy, Ausgabe nur in der Konsole.
-// Die Uhrzeit-Anzeige stammt noch aus der Vorlage und wird in Schritt 4
-// durch die richtige Oberfläche ersetzt.
+// Uhr-Teil: Liste der Verbindungen, Detailansicht mit den nächsten Abfahrten.
+// Tasten: Hoch/Runter = Auswahl, Mitte = öffnen bzw. aktualisieren,
+// Zurück = zur Liste / App beenden.
 
-let render = new Poco(screen);
+// ---------- Aussehen ----------
 
-const font = new render.Font("Bitham-Black", 30);
-const black = render.makeColor(0, 0, 0);
-const white = render.makeColor(255, 255, 255);
+const ZEILE_H = 52;   // Höhe einer Verbindung in der Liste
+const FAHRT_H = 56;   // Höhe einer Abfahrt in der Detailansicht
 
-function draw() {
-	render.begin();
-	render.fillRectangle(white, 0, 0, render.width, render.height);
+const weiss = new Skin({ fill: "white" });
+const schwarz = new Skin({ fill: "black" });
 
-	const msg = (new Date).toTimeString().slice(0, 8);
-	const width = render.getTextWidth(msg, font);
+const sStart = new Style({ font: "bold 24px Gothic", color: "black", horizontal: "left" });
+const sZiel = new Style({ font: "18px Gothic", color: "black", horizontal: "left" });
+const sStartHell = new Style({ font: "bold 24px Gothic", color: "white", horizontal: "left" });
+const sZielHell = new Style({ font: "18px Gothic", color: "white", horizontal: "left" });
+const sKopfStart = new Style({ font: "bold 18px Gothic", color: "white", horizontal: "left" });
+const sKopfZiel = new Style({ font: "18px Gothic", color: "white", horizontal: "left" });
+const sZeit = new Style({ font: "bold 28px Gothic", color: "black", horizontal: "left" });
+const sPlus = new Style({ font: "bold 28px Gothic", color: "red", horizontal: "left" });
+const sInfo = new Style({ font: "18px Gothic", color: "black", horizontal: "left" });
+const sMeldung = new Style({ font: "bold 24px Gothic", color: "black", horizontal: "center" });
 
-	render.drawText(msg, font, black,
-		(render.width - width) / 2, (render.height - font.height) / 2);
+// ---------- Zustand ----------
 
-	render.end();
-}
-
-watch.addEventListener('secondchange', draw);
-
-// ---------- Verbindungen (Anzeigenamen) ----------
+let namen = ladeNamen();
+let auswahl = 0;          // markierte Verbindung in der Liste
+let ansicht = "liste";    // "liste" oder "detail"
+let anfrage = null;       // Nummer der Verbindung, auf deren Fahrplan wir warten
 
 function ladeNamen() {
 	try {
@@ -36,7 +38,141 @@ function ladeNamen() {
 	}
 }
 
-// ---------- Nachrichten ----------
+// "Köln Hbf → Düsseldorf Hbf" -> ["Köln Hbf", "Düsseldorf Hbf"]
+function teile(name) {
+	const teile = name.split(" → ");
+	return [teile[0], teile[1] || ""];
+}
+
+// ---------- Tasten ----------
+
+class Steuerung extends Behavior {
+	onPressUp() {
+		if (ansicht === "liste" && auswahl > 0) {
+			auswahl--;
+			zeigeListe();
+		}
+		return true;
+	}
+	onPressDown() {
+		if (ansicht === "liste" && auswahl < namen.length - 1) {
+			auswahl++;
+			zeigeListe();
+		}
+		return true;
+	}
+	onPressSelect() {
+		if (ansicht === "liste" && namen.length > 0) {
+			oeffneDetail(auswahl);
+		} else if (ansicht === "detail" && anfrage === null) {
+			oeffneDetail(auswahl);   // Aktualisieren (nicht, während noch geladen wird)
+		}
+		return true;
+	}
+	onPressBack() {
+		if (ansicht === "detail") {
+			zeigeListe();
+			return true;    // Taste erledigt, App bleibt offen
+		}
+		return false;       // in der Liste: App beenden
+	}
+}
+
+const app = new Application(null, {
+	skin: weiss,
+	Behavior: Steuerung,
+	contents: []
+});
+app.focus();
+
+// ---------- Ansichten ----------
+
+function zeigeListe() {
+	ansicht = "liste";
+	anfrage = null;
+	stoppeTimeout();
+	app.empty();
+
+	if (namen.length === 0) {
+		zeigeMeldung("Verbindungen in den Einstellungen anlegen");
+		return;
+	}
+
+	// Nur so viele Zeilen zeigen, wie auf den Bildschirm passen,
+	// und dabei die markierte Zeile immer sichtbar halten.
+	const sichtbar = Math.floor(app.height / ZEILE_H);
+	const anfang = Math.max(0, auswahl - sichtbar + 1);
+
+	for (let i = anfang; i < namen.length && i < anfang + sichtbar; i++) {
+		const [start, ziel] = teile(namen[i]);
+		const aktiv = (i === auswahl);
+		app.add(new Container(null, {
+			left: 0, right: 0, top: (i - anfang) * ZEILE_H, height: ZEILE_H,
+			skin: aktiv ? schwarz : weiss,
+			contents: [
+				new Label(null, { left: 6, right: 6, top: 0, height: 28,
+					style: aktiv ? sStartHell : sStart, string: start }),
+				new Label(null, { left: 6, right: 6, top: 26, height: 22,
+					style: aktiv ? sZielHell : sZiel, string: "nach " + ziel })
+			]
+		}));
+	}
+}
+
+// Kopfzeile der Detailansicht und darunter Platz für Inhalt
+function zeigeDetailKopf(i) {
+	const [start, ziel] = teile(namen[i]);
+	app.empty();
+	app.add(new Container(null, {
+		left: 0, right: 0, top: 0, height: 46, skin: schwarz,
+		contents: [
+			new Label(null, { left: 6, right: 6, top: 2, height: 22, style: sKopfStart, string: start }),
+			new Label(null, { left: 6, right: 6, top: 22, height: 22, style: sKopfZiel, string: "nach " + ziel })
+		]
+	}));
+}
+
+function zeigeMeldung(text, oben = 0) {
+	app.add(new Text(null, {
+		left: 10, right: 10, top: oben + 40, style: sMeldung, string: text
+	}));
+}
+
+function oeffneDetail(i) {
+	ansicht = "detail";
+	zeigeDetailKopf(i);
+	zeigeMeldung("Lade...", 46);
+	frageFahrplan(i);
+}
+
+function zeigeFehler(text) {
+	zeigeDetailKopf(anfrage ?? auswahl);
+	zeigeMeldung(text, 46);
+	anfrage = null;
+}
+
+function zeigeFahrten(fahrten) {
+	zeigeDetailKopf(anfrage);
+	anfrage = null;
+	fahrten.forEach((f, n) => {
+		const inhalt = [
+			new Label(null, { left: 6, top: 0, height: 32, width: 70, style: sZeit, string: f.ab })
+		];
+		if (f.plus > 0) {
+			inhalt.push(new Label(null, { left: 76, top: 0, height: 32, width: 60,
+				style: sPlus, string: "+" + f.plus }));
+		}
+		const info = f.linie + (f.gleis ? "   Gleis " + f.gleis : "");
+		inhalt.push(new Label(null, { left: 6, right: 6, top: 30, height: 22, style: sInfo, string: info }));
+
+		app.add(new Container(null, {
+			left: 0, right: 0, top: 50 + n * FAHRT_H, height: FAHRT_H,
+			contents: inhalt
+		}));
+	});
+}
+
+// ---------- Nachrichten mit dem Handy ----------
 
 const FEHLERTEXT = {
 	1: "Keine Verbindung gefunden",
@@ -44,9 +180,9 @@ const FEHLERTEXT = {
 };
 const TIMEOUT_MS = 15000;
 
-let schreibbereit = false;   // darf die Uhr gerade senden?
-let timeout = null;          // läuft gerade eine Anfrage?
-let testGesendet = false;
+let schreibbereit = false;  // darf die Uhr gerade senden?
+let wartend = null;         // Anfrage, die noch gesendet werden muss
+let timeout = null;
 
 const message = new Message({
 	keys: ["NAMEN", "REQUEST", "FEHLER", "FAHRTEN"],
@@ -58,31 +194,34 @@ const message = new Message({
 		// Neue Liste der Verbindungen (nach dem Speichern der Einstellungen)
 		if (msg.has("NAMEN")) {
 			localStorage.setItem("namen", msg.get("NAMEN"));
-			console.log("Neue Verbindungen gespeichert: " + msg.get("NAMEN"));
+			namen = ladeNamen();
+			auswahl = Math.min(auswahl, Math.max(0, namen.length - 1));
+			if (ansicht === "liste") {
+				zeigeListe();
+			}
 		}
 
 		// Antwort auf eine Fahrplan-Anfrage
 		if (msg.has("FEHLER")) {
+			if (anfrage === null) {
+				return;   // zu spät oder Ansicht schon verlassen
+			}
 			stoppeTimeout();
 			const fehler = msg.get("FEHLER");
 			if (fehler !== 0) {
-				console.log(FEHLERTEXT[fehler] || ("Fehler " + fehler));
+				zeigeFehler(FEHLERTEXT[fehler] || ("Fehler " + fehler));
 				return;
 			}
-			const fahrten = JSON.parse(msg.get("FAHRTEN"));
-			for (const f of fahrten) {
-				const plus = f.plus > 0 ? " +" + f.plus : "";
-				console.log(f.ab + plus + "  " + f.linie + "  Gl. " + f.gleis);
-			}
+			zeigeFahrten(JSON.parse(msg.get("FAHRTEN")));
 		}
 	},
 
 	onWritable() {
 		schreibbereit = true;
-		// Test: beim ersten Mal automatisch Verbindung 1 abfragen
-		if (!testGesendet) {
-			testGesendet = true;
-			frageFahrplan(0);
+		// Wurde eine Verbindung gewählt, bevor das Handy bereit war?
+		if (wartend !== null) {
+			message.write(new Map([["REQUEST", wartend]]));
+			wartend = null;
 		}
 	},
 
@@ -93,22 +232,22 @@ const message = new Message({
 
 // Fragt beim Handy den Fahrplan für Verbindung i an (i beginnt bei 0).
 function frageFahrplan(i) {
-	const namen = ladeNamen();
-	if (!namen[i]) {
-		console.log("Keine Verbindungen. Verbindungen in den Einstellungen anlegen.");
+	anfrage = i;
+	if (!watch.connected.app) {
+		zeigeFehler("Keine Verbindung zum Handy");
 		return;
 	}
-	if (!watch.connected.app || !schreibbereit) {
-		console.log("Keine Verbindung zum Handy");
-		return;
+	if (schreibbereit) {
+		message.write(new Map([["REQUEST", i]]));
+	} else {
+		wartend = i;  // wird gesendet, sobald das Handy bereit ist
 	}
-	console.log("Frage an: " + namen[i]);
-	message.write(new Map([["REQUEST", i]]));
 
 	stoppeTimeout();
 	timeout = setTimeout(() => {
 		timeout = null;
-		console.log("Keine Antwort vom Handy (Zeitüberschreitung)");
+		wartend = null;
+		zeigeFehler("Keine Antwort vom Handy");
 	}, TIMEOUT_MS);
 }
 
@@ -119,4 +258,6 @@ function stoppeTimeout() {
 	}
 }
 
-console.log("Von A nach B gestartet. Gespeicherte Verbindungen: " + ladeNamen().length);
+// ---------- Start ----------
+
+zeigeListe();
