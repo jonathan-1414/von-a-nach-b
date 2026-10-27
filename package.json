@@ -2,9 +2,13 @@
   "name": "von-a-nach-b",
   "author": "MakeAwesomeHappen",
   "version": "1.0.0",
-  "keywords": ["pebble-app"],
+  "keywords": [
+    "pebble-app"
+  ],
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "@rebble/clay": "^1.1.0"
+  },
   "pebble": {
     "displayName": "Von A nach B",
     "uuid": "caff2241-1543-4483-a97d-73dfac930ab8",
@@ -17,6 +21,9 @@
     "watchapp": {
       "watchface": false
     },
+    "capabilities": [
+      "configurable"
+    ],
     "messageKeys": [
       "dummy"
     ],
