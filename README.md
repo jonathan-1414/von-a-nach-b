@@ -43,3 +43,7 @@ pebble install --phone <IP> --logs         # auf die Uhr (Entwicklerverbindung i
 
 **Hinweis:** Die Namensliste kommt nur auf der Uhr an, wenn die App beim Speichern
 der Einstellungen auf der Uhr geöffnet ist.
+
+## Lizenz
+
+MIT, siehe [LICENSE](LICENSE).

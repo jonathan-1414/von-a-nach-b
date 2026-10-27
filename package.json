@@ -1,6 +1,7 @@
 {
   "name": "von-a-nach-b",
-  "author": "MakeAwesomeHappen",
+  "author": "jonathan-1414",
+  "license": "MIT",
   "version": "1.0.0",
   "keywords": [
     "pebble-app"
