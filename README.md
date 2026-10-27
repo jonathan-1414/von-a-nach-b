@@ -4,6 +4,8 @@ Pebble-App für die **Pebble Time 2** (Plattform `emery`). Sie zeigt für gespei
 die nächsten drei Abfahrten mit Echtzeitdaten: Abfahrtszeit, Verspätung, Linie und Gleis.
 Die Fahrplandaten kommen von [Transitous](https://transitous.org).
 
+![Liste der Verbindungen](screenshots/liste.png) ![Detailansicht Köln Hbf nach Köln-Mülheim](screenshots/detail.png)
+
 ## Bedienung
 
 - **Einstellungen** (in der Pebble-App auf dem Handy): bis zu 10 Verbindungen als Freitext eintragen,
