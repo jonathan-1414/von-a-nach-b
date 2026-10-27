@@ -18,9 +18,20 @@ const sStartHell = new Style({ font: "bold 24px Gothic", color: "white", horizon
 const sZielHell = new Style({ font: "18px Gothic", color: "white", horizontal: "left" });
 const sKopfStart = new Style({ font: "bold 18px Gothic", color: "white", horizontal: "left" });
 const sKopfZiel = new Style({ font: "18px Gothic", color: "white", horizontal: "left" });
-const sZeit = new Style({ font: "bold 28px Gothic", color: "black", horizontal: "left" });
-const sPlus = new Style({ font: "bold 28px Gothic", color: "red", horizontal: "left" });
-const sInfo = new Style({ font: "18px Gothic", color: "black", horizontal: "left" });
+const sZeit = new Style({ font: "bold 24px Gothic", color: "black", horizontal: "left" });
+const sPlus = new Style({ font: "bold 24px Gothic", color: "red", horizontal: "left" });
+const sInfoHell = new Style({ font: "24px Gothic", color: "white", horizontal: "left" });
+const sInfoDunkel = new Style({ font: "24px Gothic", color: "black", horizontal: "left" });
+
+// Farbcode für die Zeile mit Linie und Gleis (Kürzel kommt vom Handy).
+// Farben aus der 64-Farben-Palette der Pebble.
+const FARBCODE = {
+	S: { skin: new Skin({ fill: "#00AA00" }), style: sInfoHell },    // S-Bahn: Grün
+	B: { skin: new Skin({ fill: "#AA00FF" }), style: sInfoHell },    // Bus: Violett
+	U: { skin: new Skin({ fill: "#0055AA" }), style: sInfoHell },    // U-Bahn: Blau
+	T: { skin: new Skin({ fill: "#FFFF00" }), style: sInfoDunkel },  // Tram: Gelb
+	Z: { skin: new Skin({ fill: "#FF0000" }), style: sInfoHell }     // andere Züge: Rot
+};
 const sMeldung = new Style({ font: "bold 24px Gothic", color: "black", horizontal: "center" });
 
 // ---------- Zustand ----------
@@ -42,6 +53,24 @@ function ladeNamen() {
 function teile(name) {
 	const teile = name.split(" → ");
 	return [teile[0], teile[1] || ""];
+}
+
+// Kürzt einen Text so, dass er in der Schrift "style" höchstens "breite"
+// Pixel breit ist. Wurde gekürzt, steht am Ende "...".
+function kuerze(text, style, breite) {
+	if (style.measure(text).width <= breite) {
+		return text;
+	}
+	let laenge = text.length;
+	while (laenge > 0 && style.measure(text.slice(0, laenge).trimEnd() + "...").width > breite) {
+		laenge--;
+	}
+	return text.slice(0, laenge).trimEnd() + "...";
+}
+
+// Platz für Text zwischen linkem und rechtem Rand (je 6 Pixel)
+function textBreite() {
+	return app.width - 12;
 }
 
 // ---------- Tasten ----------
@@ -106,14 +135,16 @@ function zeigeListe() {
 	for (let i = anfang; i < namen.length && i < anfang + sichtbar; i++) {
 		const [start, ziel] = teile(namen[i]);
 		const aktiv = (i === auswahl);
+		const sOben = aktiv ? sStartHell : sStart;
+		const sUnten = aktiv ? sZielHell : sZiel;
 		app.add(new Container(null, {
 			left: 0, right: 0, top: (i - anfang) * ZEILE_H, height: ZEILE_H,
 			skin: aktiv ? schwarz : weiss,
 			contents: [
 				new Label(null, { left: 6, right: 6, top: 0, height: 28,
-					style: aktiv ? sStartHell : sStart, string: start }),
+					style: sOben, string: kuerze(start, sOben, textBreite()) }),
 				new Label(null, { left: 6, right: 6, top: 26, height: 22,
-					style: aktiv ? sZielHell : sZiel, string: "nach " + ziel })
+					style: sUnten, string: kuerze("nach " + ziel, sUnten, textBreite()) })
 			]
 		}));
 	}
@@ -126,8 +157,10 @@ function zeigeDetailKopf(i) {
 	app.add(new Container(null, {
 		left: 0, right: 0, top: 0, height: 46, skin: schwarz,
 		contents: [
-			new Label(null, { left: 6, right: 6, top: 2, height: 22, style: sKopfStart, string: start }),
-			new Label(null, { left: 6, right: 6, top: 22, height: 22, style: sKopfZiel, string: "nach " + ziel })
+			new Label(null, { left: 6, right: 6, top: 2, height: 22, style: sKopfStart,
+				string: kuerze(start, sKopfStart, textBreite()) }),
+			new Label(null, { left: 6, right: 6, top: 22, height: 22, style: sKopfZiel,
+				string: kuerze("nach " + ziel, sKopfZiel, textBreite()) })
 		]
 	}));
 }
@@ -156,14 +189,24 @@ function zeigeFahrten(fahrten) {
 	anfrage = null;
 	fahrten.forEach((f, n) => {
 		const inhalt = [
-			new Label(null, { left: 6, top: 0, height: 32, width: 70, style: sZeit, string: f.ab })
+			new Label(null, { left: 6, top: 0, height: 26, width: 60, style: sZeit, string: f.ab })
 		];
 		if (f.plus > 0) {
-			inhalt.push(new Label(null, { left: 76, top: 0, height: 32, width: 60,
+			inhalt.push(new Label(null, { left: 66, top: 0, height: 26, width: 60,
 				style: sPlus, string: "+" + f.plus }));
 		}
-		const info = f.linie + (f.gleis ? "   Gleis " + f.gleis : "");
-		inhalt.push(new Label(null, { left: 6, right: 6, top: 30, height: 22, style: sInfo, string: info }));
+		// Zeile mit Linie und Gleis, Hintergrund je nach Verkehrsart
+		const farbe = FARBCODE[f.art] || FARBCODE.Z;
+		// Bei Bussen heißt die Haltestellen-Nummer "Steig", sonst "Gleis"
+		const ort = (f.art === "B") ? "Steig" : "Gleis";
+		const info = f.linie + (f.gleis ? "   " + ort + " " + f.gleis : "");
+		inhalt.push(new Container(null, {
+			left: 0, right: 0, top: 26, height: 28, skin: farbe.skin,
+			contents: [
+				new Label(null, { left: 6, right: 6, top: 0, height: 28, style: farbe.style,
+					string: kuerze(info, farbe.style, textBreite()) })
+			]
+		}));
 
 		app.add(new Container(null, {
 			left: 0, right: 0, top: 50 + n * FAHRT_H, height: FAHRT_H,

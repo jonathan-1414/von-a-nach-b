@@ -202,6 +202,21 @@ function verspaetungMinuten(soll, ist) {
   return Math.round((new Date(ist) - new Date(soll)) / 60000);
 }
 
+// Verkehrsart als Kürzel für den Farbcode auf der Uhr:
+// S = S-Bahn, B = Bus, U = U-Bahn, T = Tram/Straßenbahn, Z = alle anderen Züge
+function verkehrsart(mode) {
+  switch (mode) {
+    case 'SUBURBAN': return 'S';
+    case 'BUS':
+    case 'COACH': return 'B';
+    case 'SUBWAY':
+    case 'METRO': return 'U';
+    case 'TRAM':
+    case 'CABLE_CAR': return 'T';
+    default: return 'Z';
+  }
+}
+
 // Macht aus einer Transitous-Verbindung ein kleines Objekt für die Uhr.
 // Fußwege (WALK) am Anfang/Ende werden übersprungen.
 function kurzfassung(itinerary) {
@@ -215,6 +230,7 @@ function kurzfassung(itinerary) {
   return {
     ab: uhrzeit(erste.from.scheduledDeparture),
     linie: erste.routeShortName || erste.mode,
+    art: verkehrsart(erste.mode),
     gleis: erste.from.track || erste.from.scheduledTrack || '',
     plus: verspaetungMinuten(erste.from.scheduledDeparture, erste.from.departure)
   };
