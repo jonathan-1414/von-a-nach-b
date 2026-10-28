@@ -25,6 +25,10 @@ var USER_AGENT = 'VonAnachB/0.2.0 (Pebble; +https://github.com/jonathan-1414/von
 var FEHLER_KEINE_VERBINDUNG = 1;
 var FEHLER_NETZ = 2;
 
+// Abfahrten, die später liegen, werden nicht angezeigt (Issue #5).
+// Die Uhr zeigt nur die Uhrzeit, kein Datum.
+var MAX_STUNDEN = 20;
+
 // ---------- Speicher ----------
 // "verbindungen" ist eine Liste mit 10 Plätzen (wie in den Einstellungen).
 // Leerer Platz: null. Sonst:
@@ -230,6 +234,10 @@ function kurzfassung(itinerary) {
     return null;
   }
   var erste = fahrten[0];
+  var bis = Date.now() + MAX_STUNDEN * 60 * 60 * 1000;
+  if (new Date(erste.from.scheduledDeparture).getTime() > bis) {
+    return null;   // zu weit in der Zukunft
+  }
   return {
     ab: uhrzeit(erste.from.scheduledDeparture),
     linie: erste.routeShortName || erste.mode,

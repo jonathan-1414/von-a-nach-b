@@ -218,7 +218,7 @@ function zeigeFahrten(fahrten) {
 // ---------- Nachrichten mit dem Handy ----------
 
 const FEHLERTEXT = {
-	1: "Keine Verbindung gefunden",
+	1: "Aktuell keine Direktverbindung",
 	2: "Kein Netz / API-Fehler"
 };
 const TIMEOUT_MS = 15000;
