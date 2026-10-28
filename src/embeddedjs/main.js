@@ -7,7 +7,8 @@ import Message from "pebble/message";
 // ---------- Aussehen ----------
 
 const ZEILE_H = 76;      // Höhe einer Verbindung in der Liste (3 pro Bildschirm)
-const KOPF_H = 52;       // Höhe des Kopfes in der Detailansicht
+const KOPF_H = 59;       // Höhe des Kopfes in der Detailansicht: so endet die 2. Abfahrt genau unten (Issue #17)
+const KOPF_OBEN = 4;     // Abstand der Kopf-Texte vom oberen Rand, damit sie mittig sitzen
 const FAHRT_H = 87;      // Höhe einer Abfahrt in der Detailansicht
 const FAHRTEN_SICHTBAR = 2;  // so viele Abfahrten passen auf den Bildschirm
 const LEISTE_B = 4;      // Breite der Laufleiste rechts in der Detailansicht
@@ -195,16 +196,16 @@ function zeigeDetailKopf(i) {
 	const [start, ziel] = teile(namen[i]);
 	app.empty();
 	// Uhrzeit oben rechts, läuft über "minutechange" mit (Issue #6)
-	uhrLabel = new Label(null, { right: 6, width: UHR_B, top: 0, height: 28, style: sKopfUhr,
+	uhrLabel = new Label(null, { right: 6, width: UHR_B, top: KOPF_OBEN, height: 28, style: sKopfUhr,
 		string: uhrzeit });
 	app.add(new Container(null, {
 		left: 0, right: 0, top: 0, height: KOPF_H, skin: schwarz,
 		contents: [
 			// rechts bleibt Platz für die Uhrzeit
-			new Label(null, { left: 6, right: 6 + UHR_B, top: 0, height: 28, style: sKopfStart,
+			new Label(null, { left: 6, right: 6 + UHR_B, top: KOPF_OBEN, height: 28, style: sKopfStart,
 				string: kuerze(start, sKopfStart, textBreite() - UHR_B) }),
 			uhrLabel,
-			new Label(null, { left: 6, right: 6, top: 28, height: 22, style: sKopfZiel,
+			new Label(null, { left: 6, right: 6, top: KOPF_OBEN + 28, height: 22, style: sKopfZiel,
 				string: kuerze("» " + ziel, sKopfZiel, textBreite()) })
 		]
 	}));
