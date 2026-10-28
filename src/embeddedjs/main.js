@@ -181,7 +181,7 @@ function zeigeListe() {
 				new Label(null, { left: 6 + NUMMER_B, right: 6, top: 2, height: 34,
 					style: sOben, string: kuerze(start, sOben, breite) }),
 				new Label(null, { left: 6 + NUMMER_B, right: 6, top: 36, height: 30,
-					style: sUnten, string: kuerze("nach " + ziel, sUnten, breite) })
+					style: sUnten, string: kuerze("» " + ziel, sUnten, breite) })
 			]
 		}));
 	}
@@ -202,7 +202,7 @@ function zeigeDetailKopf(i) {
 				string: kuerze(start, sKopfStart, textBreite() - UHR_B) }),
 			uhrLabel,
 			new Label(null, { left: 6, right: 6, top: 28, height: 22, style: sKopfZiel,
-				string: kuerze("nach " + ziel, sKopfZiel, textBreite()) })
+				string: kuerze("» " + ziel, sKopfZiel, textBreite()) })
 		]
 	}));
 }
