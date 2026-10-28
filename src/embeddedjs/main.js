@@ -22,7 +22,11 @@ const sZielHell = new Style({ font: "24px Gothic", color: "white", horizontal: "
 const sKopfStart = new Style({ font: "bold 24px Gothic", color: "white", horizontal: "left" });
 const sKopfZiel = new Style({ font: "18px Gothic", color: "white", horizontal: "left" });
 const sZeit = new Style({ font: "bold 36px Gothic", color: "black", horizontal: "left" });
-const sPlus = new Style({ font: "bold 36px Gothic", color: "red", horizontal: "left" });
+const sPlus = new Style({ font: "bold 36px Gothic", color: "red", horizontal: "left" });      // ab +5
+const sPuenktlich = new Style({ font: "bold 36px Gothic", color: "#00AA00", horizontal: "left" }); // +0 bis +4
+const sFahrplan = new Style({ font: "24px Gothic", color: "#555555", horizontal: "left" });   // keine Echtzeit
+const sFahrplanKlein = new Style({ font: "18px Gothic", color: "#555555", horizontal: "left" }); // falls 24 zu breit
+const ROT_AB = 5;        // ab so vielen Minuten Verspätung rot statt grün
 const sInfoHell = new Style({ font: "28px Gothic", color: "white", horizontal: "left" });
 const sInfoDunkel = new Style({ font: "28px Gothic", color: "black", horizontal: "left" });
 
@@ -201,9 +205,19 @@ function zeigeFahrten(fahrten) {
 		const inhalt = [
 			new Label(null, { left: 6, top: 0, height: 44, width: zeitBreite, style: sZeit, string: f.ab })
 		];
-		if (f.plus > 0) {
-			inhalt.push(new Label(null, { left: 6 + zeitBreite + 8, right: 6, top: 0, height: 44,
-				style: sPlus, string: "+" + f.plus }));
+		// Verspätung: grün bis +4, rot ab +5. Ohne Echtzeitdaten fehlt "plus".
+		const rechts = 6 + zeitBreite + 8;
+		if (f.plus === undefined) {
+			const text = "lt. Fahrplan";
+			// Passt der Text neben einer breiten Uhrzeit nicht in 24, dann 18 nehmen
+			const passt = sFahrplan.measure(text).width <= app.width - 6 - rechts;
+			inhalt.push(new Label(null, { left: rechts, right: 6,
+				top: passt ? 10 : 14, height: passt ? 28 : 22,
+				style: passt ? sFahrplan : sFahrplanKlein, string: text }));
+		} else {
+			const text = (f.plus < 0) ? String(f.plus) : "+" + f.plus;   // zu früh: "-1"
+			inhalt.push(new Label(null, { left: rechts, right: 6, top: 0, height: 44,
+				style: (f.plus >= ROT_AB) ? sPlus : sPuenktlich, string: text }));
 		}
 		// Zeile mit Linie und Gleis, Hintergrund je nach Verkehrsart
 		const farbe = FARBCODE[f.art] || FARBCODE.Z;

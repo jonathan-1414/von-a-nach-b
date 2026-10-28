@@ -238,13 +238,18 @@ function kurzfassung(itinerary) {
   if (new Date(erste.from.scheduledDeparture).getTime() > bis) {
     return null;   // zu weit in der Zukunft
   }
-  return {
+  var kurz = {
     ab: uhrzeit(erste.from.scheduledDeparture),
     linie: erste.routeShortName || erste.mode,
     art: verkehrsart(erste.mode),
-    gleis: erste.from.track || erste.from.scheduledTrack || '',
-    plus: verspaetungMinuten(erste.from.scheduledDeparture, erste.from.departure)
+    gleis: erste.from.track || erste.from.scheduledTrack || ''
   };
+  // Verspätung nur mitschicken, wenn es Echtzeitdaten gibt.
+  // Fehlt "plus", zeigt die Uhr "lt. Fahrplan" (Issue #4).
+  if (erste.realTime) {
+    kurz.plus = verspaetungMinuten(erste.from.scheduledDeparture, erste.from.departure);
+  }
+  return kurz;
 }
 
 // Fragt die nächsten Abfahrten ab, callback(fehlercode, liste)
