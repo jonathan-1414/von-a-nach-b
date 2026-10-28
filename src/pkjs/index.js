@@ -246,6 +246,10 @@ function holeFahrplan(startId, zielId, callback) {
     '&toPlace=' + encodeURIComponent(zielId) +
     '&time=' + encodeURIComponent(new Date().toISOString()) +
     '&maxTransfers=0' +
+    // Fußwege zählen bei Transitous nicht als Umstieg. Ohne Grenze kämen
+    // Verbindungen wie "S-Bahn + 1 km zu Fuß" (Issue #3).
+    '&maxPreTransitTime=300' +    // höchstens 5 min zu Fuß vor der Fahrt
+    '&maxPostTransitTime=300' +   // höchstens 5 min zu Fuß nach der Fahrt
     '&numItineraries=3';
 
   console.log('Frage an: ' + url);
