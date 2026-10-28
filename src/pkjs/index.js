@@ -19,7 +19,7 @@ var clay = new Clay(config.baueConfig([]), null, { autoHandleEvents: false });
 
 var API = 'https://api.transitous.org/api';
 // Transitous verlangt App-Name, Version und eine Kontaktmöglichkeit.
-var USER_AGENT = 'VonAnachB/1.0.0 (Pebble; +https://github.com/jonathan-1414/von-a-nach-b)';
+var USER_AGENT = 'VonAnachB/0.2.0 (Pebble; +https://github.com/jonathan-1414/von-a-nach-b)';
 
 // Fehlercodes (später auch für die Uhr)
 var FEHLER_KEINE_VERBINDUNG = 1;
