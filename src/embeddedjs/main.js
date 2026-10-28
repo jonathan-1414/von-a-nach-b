@@ -225,6 +225,7 @@ const TIMEOUT_MS = 15000;
 
 let schreibbereit = false;  // darf die Uhr gerade senden?
 let wartend = null;         // Anfrage, die noch gesendet werden muss
+let nochmal = null;         // Timer für einen erneuten Sendeversuch
 let timeout = null;
 
 const message = new Message({
@@ -263,10 +264,7 @@ const message = new Message({
 	onWritable() {
 		schreibbereit = true;
 		// Wurde eine Verbindung gewählt, bevor das Handy bereit war?
-		if (wartend !== null) {
-			message.write(new Map([["REQUEST", wartend]]));
-			wartend = null;
-		}
+		sende();
 	},
 
 	onSuspend() {
@@ -281,11 +279,8 @@ function frageFahrplan(i) {
 		zeigeFehler("Keine Verbindung zum Handy");
 		return;
 	}
-	if (schreibbereit) {
-		message.write(new Map([["REQUEST", i]]));
-	} else {
-		wartend = i;  // wird gesendet, sobald das Handy bereit ist
-	}
+	wartend = i;
+	sende();
 
 	stoppeTimeout();
 	timeout = setTimeout(() => {
@@ -293,6 +288,29 @@ function frageFahrplan(i) {
 		wartend = null;
 		zeigeFehler("Keine Antwort vom Handy");
 	}, TIMEOUT_MS);
+}
+
+// Schickt die wartende Anfrage ans Handy, sobald das möglich ist.
+// Ist der Ausgang noch belegt (z. B. weil gerade eine Nachricht ankommt),
+// wirft write() einen Fehler. Dann nach kurzer Pause erneut versuchen,
+// statt die App abstürzen zu lassen (Issue #10).
+function sende() {
+	if (wartend === null || !schreibbereit) {
+		return;   // nichts zu tun, oder onWritable() ruft uns später auf
+	}
+	try {
+		message.write(new Map([["REQUEST", wartend]]));
+	} catch (e) {
+		if (nochmal === null) {
+			nochmal = setTimeout(() => {
+				nochmal = null;
+				sende();
+			}, 500);
+		}
+		return;
+	}
+	wartend = null;
+	schreibbereit = false;   // erst nach dem nächsten onWritable() wieder senden
 }
 
 function stoppeTimeout() {
