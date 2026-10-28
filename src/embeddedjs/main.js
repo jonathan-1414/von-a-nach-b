@@ -7,7 +7,6 @@ import Message from "pebble/message";
 // ---------- Aussehen ----------
 
 const ZEILE_H = 76;      // Höhe einer Verbindung in der Liste (3 pro Bildschirm)
-const NUMMER_B = 30;     // Platz links für die Nummer der Verbindung
 const KOPF_H = 52;       // Höhe des Kopfes in der Detailansicht
 const FAHRT_H = 87;      // Höhe einer Abfahrt in der Detailansicht
 const FAHRTEN_SICHTBAR = 2;  // so viele Abfahrten passen auf den Bildschirm
@@ -32,6 +31,10 @@ const sFahrplanKlein = new Style({ font: "18px Gothic", color: "#555555", horizo
 const ROT_AB = 5;        // ab so vielen Minuten Verspätung rot statt grün
 const sInfoHell = new Style({ font: "28px Gothic", color: "white", horizontal: "left" });
 const sInfoDunkel = new Style({ font: "28px Gothic", color: "black", horizontal: "left" });
+
+// Platz links für die Nummer der Verbindung: breiteste Ziffer plus 6 px Abstand.
+// Die 10. Verbindung heißt "0", darum ist die Nummer immer einstellig (Issue #15).
+const NUMMER_B = Math.max(..."0123456789".split("").map(z => sStart.measure(z).width)) + 6;
 
 // Farbcode für die Zeile mit Linie und Gleis (Kürzel kommt vom Handy).
 // Farben aus der 64-Farben-Palette der Pebble.
@@ -175,9 +178,9 @@ function zeigeListe() {
 			left: 0, right: 0, top: (i - anfang) * ZEILE_H, height: ZEILE_H,
 			skin: aktiv ? schwarz : weiss,
 			contents: [
-				// Nummer der Verbindung (1 bis 10), damit man sie schneller findet
+				// Nummer der Verbindung (1 bis 9, die zehnte ist 0), damit man sie schneller findet
 				new Label(null, { left: 6, top: 2, height: 34, width: NUMMER_B,
-					style: sOben, string: String(i + 1) }),
+					style: sOben, string: String((i + 1) % 10) }),
 				new Label(null, { left: 6 + NUMMER_B, right: 6, top: 2, height: 34,
 					style: sOben, string: kuerze(start, sOben, breite) }),
 				new Label(null, { left: 6 + NUMMER_B, right: 6, top: 36, height: 30,
