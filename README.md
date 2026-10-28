@@ -1,5 +1,8 @@
 # Von A nach B
 
+Ein Abfahrtsmonitor für Direktverbindungen, unabhängig vom aktuellen Standort. Über die App lassen
+sich z. B. bei großen Bahnhöfen genau die Verbindungen herausfiltern, die man benötigt.
+
 Pebble-App für die **Pebble Time 2** (Plattform `emery`). Sie zeigt für gespeicherte Bahnverbindungen
 die nächsten drei Abfahrten mit Echtzeitdaten: Abfahrtszeit, Verspätung, Linie und Gleis.
 Die Fahrplandaten kommen von [Transitous](https://transitous.org)
