@@ -11,6 +11,7 @@ const NUMMER_B = 30;     // Platz links für die Nummer der Verbindung
 const KOPF_H = 52;       // Höhe des Kopfes in der Detailansicht
 const FAHRT_H = 87;      // Höhe einer Abfahrt in der Detailansicht
 const FAHRTEN_SICHTBAR = 2;  // so viele Abfahrten passen auf den Bildschirm
+const LEISTE_B = 4;      // Breite der Laufleiste rechts in der Detailansicht
 const UHR_B = 60;        // Platz rechts im Kopf für die Uhrzeit (Issue #6)
 
 const weiss = new Skin({ fill: "white" });
@@ -258,6 +259,21 @@ function zeichneFahrten() {
 			contents: inhalt
 		}));
 	});
+	zeigeLaufleiste();
+}
+
+// Schmaler Balken am rechten Rand: zeigt, welcher Teil der Abfahrten
+// gerade zu sehen ist. Nur, wenn es mehr gibt, als auf den Bildschirm passen.
+function zeigeLaufleiste() {
+	if (fahrten.length <= FAHRTEN_SICHTBAR) {
+		return;
+	}
+	const bereich = app.height - KOPF_H;   // Höhe unter dem Kopf
+	const oben = Math.round(bereich * erste / fahrten.length);
+	const hoehe = Math.round(bereich * FAHRTEN_SICHTBAR / fahrten.length);
+	app.add(new Content(null, {
+		right: 0, width: LEISTE_B, top: KOPF_H + oben, height: hoehe, skin: schwarz
+	}));
 }
 
 // ---------- Nachrichten mit dem Handy ----------
