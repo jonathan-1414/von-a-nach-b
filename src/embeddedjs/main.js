@@ -16,7 +16,7 @@ const UHR_B = 60;        // Platz rechts im Kopf für die Uhrzeit (Issue #6)
 
 const weiss = new Skin({ fill: "white" });
 const schwarz = new Skin({ fill: "black" });
-const grau = new Skin({ fill: "#AAAAAA" });   // Spur der Laufleiste
+const grau = new Skin({ fill: "#AAAAAA" });   // Balken der Laufleiste
 
 const sStart = new Style({ font: "bold 28px Gothic", color: "black", horizontal: "left" });
 const sZiel = new Style({ font: "24px Gothic", color: "black", horizontal: "left" });
@@ -34,9 +34,9 @@ const ROT_AB = 5;        // ab so vielen Minuten Verspätung rot statt grün
 const sInfoHell = new Style({ font: "28px Gothic", color: "white", horizontal: "left" });
 const sInfoDunkel = new Style({ font: "28px Gothic", color: "black", horizontal: "left" });
 
-// Platz links für die Nummer der Verbindung: breiteste Ziffer plus 6 px Abstand.
+// Platz links für die Nummer der Verbindung: breiteste Ziffer plus 8 px Abstand.
 // Die 10. Verbindung heißt "0", darum ist die Nummer immer einstellig (Issue #15).
-const NUMMER_B = Math.max(..."0123456789".split("").map(z => sStart.measure(z).width)) + 6;
+const NUMMER_B = Math.max(..."0123456789".split("").map(z => sStart.measure(z).width)) + 8;
 
 // Farbcode für die Zeile mit Linie und Gleis (Kürzel kommt vom Handy).
 // Farben aus der 64-Farben-Palette der Pebble.
@@ -287,8 +287,8 @@ function zeichneFahrten() {
 	zeigeLaufleiste();
 }
 
-// Laufleiste am rechten Rand: hellgraue Spur vom Kopf bis unten, darauf ein
-// schwarzer Balken, der zeigt, welcher Teil der Abfahrten zu sehen ist.
+// Laufleiste am rechten Rand: schwarze Spur vom Kopf bis unten, darauf ein
+// grauer Balken, der zeigt, welcher Teil der Abfahrten zu sehen ist.
 // Nur, wenn es mehr gibt, als auf den Bildschirm passen.
 function zeigeLaufleiste() {
 	if (fahrten.length <= FAHRTEN_SICHTBAR) {
@@ -298,10 +298,10 @@ function zeigeLaufleiste() {
 	const oben = Math.round(bereich * erste / fahrten.length);
 	const hoehe = Math.round(bereich * FAHRTEN_SICHTBAR / fahrten.length);
 	app.add(new Content(null, {
-		right: 0, width: LEISTE_B, top: KOPF_H, bottom: 0, skin: grau
+		right: 0, width: LEISTE_B, top: KOPF_H, bottom: 0, skin: schwarz
 	}));
 	app.add(new Content(null, {
-		right: 0, width: LEISTE_B, top: KOPF_H + oben, height: hoehe, skin: schwarz
+		right: 0, width: LEISTE_B, top: KOPF_H + oben, height: hoehe, skin: grau
 	}));
 }
 
