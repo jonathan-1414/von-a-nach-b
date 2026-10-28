@@ -9,7 +9,8 @@ import Message from "pebble/message";
 const ZEILE_H = 76;      // Höhe einer Verbindung in der Liste (3 pro Bildschirm)
 const NUMMER_B = 30;     // Platz links für die Nummer der Verbindung
 const KOPF_H = 52;       // Höhe des Kopfes in der Detailansicht
-const FAHRT_H = 87;      // Höhe einer Abfahrt in der Detailansicht (2 pro Bildschirm)
+const FAHRT_H = 87;      // Höhe einer Abfahrt in der Detailansicht
+const FAHRTEN_SICHTBAR = 2;  // so viele Abfahrten passen auf den Bildschirm
 const UHR_B = 60;        // Platz rechts im Kopf für die Uhrzeit (Issue #6)
 
 const weiss = new Skin({ fill: "white" });
@@ -47,6 +48,8 @@ let namen = ladeNamen();
 let auswahl = 0;          // markierte Verbindung in der Liste
 let ansicht = "liste";    // "liste" oder "detail"
 let anfrage = null;       // Nummer der Verbindung, auf deren Fahrplan wir warten
+let fahrten = [];         // empfangene Abfahrten (bis zu 5) der geöffneten Verbindung
+let erste = 0;            // welche Abfahrt oben in der Detailansicht steht
 
 function ladeNamen() {
 	try {
@@ -84,10 +87,14 @@ function textBreite() {
 
 class Steuerung extends Behavior {
 	// Die Liste ist rund: oben weiter -> letzter Eintrag, unten weiter -> erster (Issue #11)
+	// In der Detailansicht blättern Up/Down um je eine Abfahrt (Issue #7).
 	onPressUp() {
 		if (ansicht === "liste" && namen.length > 0) {
 			auswahl = (auswahl > 0) ? auswahl - 1 : namen.length - 1;
 			zeigeListe();
+		} else if (ansicht === "detail" && erste > 0) {
+			erste--;
+			zeichneFahrten();
 		}
 		return true;
 	}
@@ -95,6 +102,9 @@ class Steuerung extends Behavior {
 		if (ansicht === "liste" && namen.length > 0) {
 			auswahl = (auswahl < namen.length - 1) ? auswahl + 1 : 0;
 			zeigeListe();
+		} else if (ansicht === "detail" && erste + FAHRTEN_SICHTBAR < fahrten.length) {
+			erste++;
+			zeichneFahrten();
 		}
 		return true;
 	}
@@ -186,6 +196,8 @@ function zeigeMeldung(text, oben = 0) {
 
 function oeffneDetail(i) {
 	ansicht = "detail";
+	fahrten = [];
+	erste = 0;
 	zeigeDetailKopf(i);
 	zeigeMeldung("Lade...", KOPF_H);
 	frageFahrplan(i);
@@ -197,11 +209,19 @@ function zeigeFehler(text) {
 	anfrage = null;
 }
 
-function zeigeFahrten(fahrten) {
-	zeigeDetailKopf(anfrage);
+// Neue Abfahrten vom Handy anzeigen, oben beginnend
+function zeigeFahrten(neu) {
 	anfrage = null;
-	// Nur 2 Abfahrten passen auf den Bildschirm (mehr per Scrollen: Issue #7)
-	fahrten.slice(0, 2).forEach((f, n) => {
+	fahrten = neu;
+	erste = 0;
+	zeichneFahrten();
+}
+
+// Zeichnet die Detailansicht neu: Kopf und die 2 Abfahrten ab Nummer "erste".
+// Es werden immer nur die sichtbaren Abfahrten gebaut (spart Speicher).
+function zeichneFahrten() {
+	zeigeDetailKopf(auswahl);
+	fahrten.slice(erste, erste + FAHRTEN_SICHTBAR).forEach((f, n) => {
 		const zeitBreite = sZeit.measure(f.ab).width;
 		const inhalt = [
 			new Label(null, { left: 6, top: 0, height: 44, width: zeitBreite, style: sZeit, string: f.ab })

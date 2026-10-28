@@ -263,7 +263,7 @@ function holeFahrplan(startId, zielId, callback) {
     // Verbindungen wie "S-Bahn + 1 km zu Fuß" (Issue #3).
     '&maxPreTransitTime=300' +    // höchstens 5 min zu Fuß vor der Fahrt
     '&maxPostTransitTime=300' +   // höchstens 5 min zu Fuß nach der Fahrt
-    '&numItineraries=3';
+    '&numItineraries=5';
 
   console.log('Frage an: ' + url);
 
@@ -276,7 +276,7 @@ function holeFahrplan(startId, zielId, callback) {
     var liste = (daten.itineraries || [])
       .map(kurzfassung)
       .filter(function (v) { return v !== null; })
-      .slice(0, 3);
+      .slice(0, 5);
     if (liste.length === 0) {
       callback(FEHLER_KEINE_VERBINDUNG);
       return;
