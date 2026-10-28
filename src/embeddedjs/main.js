@@ -11,11 +11,12 @@ const KOPF_H = 59;       // Höhe des Kopfes in der Detailansicht: so endet die 
 const KOPF_OBEN = 4;     // Abstand der Kopf-Texte vom oberen Rand, damit sie mittig sitzen
 const FAHRT_H = 87;      // Höhe einer Abfahrt in der Detailansicht
 const FAHRTEN_SICHTBAR = 2;  // so viele Abfahrten passen auf den Bildschirm
-const LEISTE_B = 4;      // Breite der Laufleiste rechts in der Detailansicht
+const LEISTE_B = 6;      // Breite der Laufleiste rechts in der Detailansicht (Issue #16)
 const UHR_B = 60;        // Platz rechts im Kopf für die Uhrzeit (Issue #6)
 
 const weiss = new Skin({ fill: "white" });
 const schwarz = new Skin({ fill: "black" });
+const grau = new Skin({ fill: "#AAAAAA" });   // Spur der Laufleiste
 
 const sStart = new Style({ font: "bold 28px Gothic", color: "black", horizontal: "left" });
 const sZiel = new Style({ font: "24px Gothic", color: "black", horizontal: "left" });
@@ -244,6 +245,8 @@ function zeigeFahrten(neu) {
 // Es werden immer nur die sichtbaren Abfahrten gebaut (spart Speicher).
 function zeichneFahrten() {
 	zeigeDetailKopf(auswahl);
+	// Gibt es eine Laufleiste, enden die Abfahrten davor, damit nichts überlappt.
+	const platz = (fahrten.length > FAHRTEN_SICHTBAR) ? LEISTE_B : 0;
 	fahrten.slice(erste, erste + FAHRTEN_SICHTBAR).forEach((f, n) => {
 		const zeitBreite = sZeit.measure(f.ab).width;
 		const inhalt = [
@@ -254,7 +257,7 @@ function zeichneFahrten() {
 		if (f.plus === undefined) {
 			const text = "lt. Fahrplan";
 			// Passt der Text neben einer breiten Uhrzeit nicht in 24, dann 18 nehmen
-			const passt = sFahrplan.measure(text).width <= app.width - 6 - rechts;
+			const passt = sFahrplan.measure(text).width <= app.width - platz - 6 - rechts;
 			inhalt.push(new Label(null, { left: rechts, right: 6,
 				top: passt ? 10 : 14, height: passt ? 28 : 22,
 				style: passt ? sFahrplan : sFahrplanKlein, string: text }));
@@ -272,20 +275,21 @@ function zeichneFahrten() {
 			left: 0, right: 0, top: 44, height: 36, skin: farbe.skin,
 			contents: [
 				new Label(null, { left: 6, right: 6, top: 0, height: 36, style: farbe.style,
-					string: kuerze(info, farbe.style, textBreite()) })
+					string: kuerze(info, farbe.style, textBreite() - platz) })
 			]
 		}));
 
 		app.add(new Container(null, {
-			left: 0, right: 0, top: KOPF_H + 2 + n * FAHRT_H, height: FAHRT_H,
+			left: 0, right: platz, top: KOPF_H + 2 + n * FAHRT_H, height: FAHRT_H,
 			contents: inhalt
 		}));
 	});
 	zeigeLaufleiste();
 }
 
-// Schmaler Balken am rechten Rand: zeigt, welcher Teil der Abfahrten
-// gerade zu sehen ist. Nur, wenn es mehr gibt, als auf den Bildschirm passen.
+// Laufleiste am rechten Rand: hellgraue Spur vom Kopf bis unten, darauf ein
+// schwarzer Balken, der zeigt, welcher Teil der Abfahrten zu sehen ist.
+// Nur, wenn es mehr gibt, als auf den Bildschirm passen.
 function zeigeLaufleiste() {
 	if (fahrten.length <= FAHRTEN_SICHTBAR) {
 		return;
@@ -293,6 +297,9 @@ function zeigeLaufleiste() {
 	const bereich = app.height - KOPF_H;   // Höhe unter dem Kopf
 	const oben = Math.round(bereich * erste / fahrten.length);
 	const hoehe = Math.round(bereich * FAHRTEN_SICHTBAR / fahrten.length);
+	app.add(new Content(null, {
+		right: 0, width: LEISTE_B, top: KOPF_H, bottom: 0, skin: grau
+	}));
 	app.add(new Content(null, {
 		right: 0, width: LEISTE_B, top: KOPF_H + oben, height: hoehe, skin: schwarz
 	}));
