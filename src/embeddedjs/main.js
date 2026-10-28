@@ -83,16 +83,17 @@ function textBreite() {
 // ---------- Tasten ----------
 
 class Steuerung extends Behavior {
+	// Die Liste ist rund: oben weiter -> letzter Eintrag, unten weiter -> erster (Issue #11)
 	onPressUp() {
-		if (ansicht === "liste" && auswahl > 0) {
-			auswahl--;
+		if (ansicht === "liste" && namen.length > 0) {
+			auswahl = (auswahl > 0) ? auswahl - 1 : namen.length - 1;
 			zeigeListe();
 		}
 		return true;
 	}
 	onPressDown() {
-		if (ansicht === "liste" && auswahl < namen.length - 1) {
-			auswahl++;
+		if (ansicht === "liste" && namen.length > 0) {
+			auswahl = (auswahl < namen.length - 1) ? auswahl + 1 : 0;
 			zeigeListe();
 		}
 		return true;
