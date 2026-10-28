@@ -23,6 +23,7 @@ const sStartHell = new Style({ font: "bold 28px Gothic", color: "white", horizon
 const sZielHell = new Style({ font: "24px Gothic", color: "white", horizontal: "left" });
 const sKopfStart = new Style({ font: "bold 24px Gothic", color: "white", horizontal: "left" });
 const sKopfZiel = new Style({ font: "18px Gothic", color: "white", horizontal: "left" });
+const sKopfUhr = new Style({ font: "bold 24px Gothic", color: "white", horizontal: "right" });
 const sZeit = new Style({ font: "bold 36px Gothic", color: "black", horizontal: "left" });
 const sPlus = new Style({ font: "bold 36px Gothic", color: "red", horizontal: "left" });      // ab +5
 const sPuenktlich = new Style({ font: "bold 36px Gothic", color: "#00AA00", horizontal: "left" }); // +0 bis +4
@@ -51,6 +52,18 @@ let ansicht = "liste";    // "liste" oder "detail"
 let anfrage = null;       // Nummer der Verbindung, auf deren Fahrplan wir warten
 let fahrten = [];         // empfangene Abfahrten (bis zu 5) der geöffneten Verbindung
 let erste = 0;            // welche Abfahrt oben in der Detailansicht steht
+let uhrzeit = "";         // aktuelle Uhrzeit als Text, z. B. "07:05"
+let uhrLabel = null;      // Anzeige der Uhrzeit im Kopf (nur in der Detailansicht)
+
+// Die Uhr meldet sich genau beim Minutenwechsel (und einmal sofort beim Start).
+// In der Liste gibt es kein uhrLabel, dann wird nur "uhrzeit" gemerkt.
+watch.addEventListener("minutechange", e => {
+	const d = e.date;
+	uhrzeit = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+	if (uhrLabel !== null) {
+		uhrLabel.string = uhrzeit;
+	}
+});
 
 function ladeNamen() {
 	try {
@@ -138,6 +151,7 @@ app.focus();
 function zeigeListe() {
 	ansicht = "liste";
 	anfrage = null;
+	uhrLabel = null;
 	stoppeTimeout();
 	app.empty();
 
@@ -177,12 +191,16 @@ function zeigeListe() {
 function zeigeDetailKopf(i) {
 	const [start, ziel] = teile(namen[i]);
 	app.empty();
+	// Uhrzeit oben rechts, läuft über "minutechange" mit (Issue #6)
+	uhrLabel = new Label(null, { right: 6, width: UHR_B, top: 0, height: 28, style: sKopfUhr,
+		string: uhrzeit });
 	app.add(new Container(null, {
 		left: 0, right: 0, top: 0, height: KOPF_H, skin: schwarz,
 		contents: [
-			// rechts bleibt Platz für die Uhrzeit (Issue #6)
+			// rechts bleibt Platz für die Uhrzeit
 			new Label(null, { left: 6, right: 6 + UHR_B, top: 0, height: 28, style: sKopfStart,
 				string: kuerze(start, sKopfStart, textBreite() - UHR_B) }),
+			uhrLabel,
 			new Label(null, { left: 6, right: 6, top: 28, height: 22, style: sKopfZiel,
 				string: kuerze("nach " + ziel, sKopfZiel, textBreite()) })
 		]
