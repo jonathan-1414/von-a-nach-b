@@ -6,22 +6,25 @@ import Message from "pebble/message";
 
 // ---------- Aussehen ----------
 
-const ZEILE_H = 52;   // Höhe einer Verbindung in der Liste
-const FAHRT_H = 56;   // Höhe einer Abfahrt in der Detailansicht
+const ZEILE_H = 76;      // Höhe einer Verbindung in der Liste (3 pro Bildschirm)
+const NUMMER_B = 30;     // Platz links für die Nummer der Verbindung
+const KOPF_H = 52;       // Höhe des Kopfes in der Detailansicht
+const FAHRT_H = 87;      // Höhe einer Abfahrt in der Detailansicht (2 pro Bildschirm)
+const UHR_B = 60;        // Platz rechts im Kopf für die Uhrzeit (Issue #6)
 
 const weiss = new Skin({ fill: "white" });
 const schwarz = new Skin({ fill: "black" });
 
-const sStart = new Style({ font: "bold 24px Gothic", color: "black", horizontal: "left" });
-const sZiel = new Style({ font: "18px Gothic", color: "black", horizontal: "left" });
-const sStartHell = new Style({ font: "bold 24px Gothic", color: "white", horizontal: "left" });
-const sZielHell = new Style({ font: "18px Gothic", color: "white", horizontal: "left" });
-const sKopfStart = new Style({ font: "bold 18px Gothic", color: "white", horizontal: "left" });
+const sStart = new Style({ font: "bold 28px Gothic", color: "black", horizontal: "left" });
+const sZiel = new Style({ font: "24px Gothic", color: "black", horizontal: "left" });
+const sStartHell = new Style({ font: "bold 28px Gothic", color: "white", horizontal: "left" });
+const sZielHell = new Style({ font: "24px Gothic", color: "white", horizontal: "left" });
+const sKopfStart = new Style({ font: "bold 24px Gothic", color: "white", horizontal: "left" });
 const sKopfZiel = new Style({ font: "18px Gothic", color: "white", horizontal: "left" });
-const sZeit = new Style({ font: "bold 24px Gothic", color: "black", horizontal: "left" });
-const sPlus = new Style({ font: "bold 24px Gothic", color: "red", horizontal: "left" });
-const sInfoHell = new Style({ font: "24px Gothic", color: "white", horizontal: "left" });
-const sInfoDunkel = new Style({ font: "24px Gothic", color: "black", horizontal: "left" });
+const sZeit = new Style({ font: "bold 36px Gothic", color: "black", horizontal: "left" });
+const sPlus = new Style({ font: "bold 36px Gothic", color: "red", horizontal: "left" });
+const sInfoHell = new Style({ font: "28px Gothic", color: "white", horizontal: "left" });
+const sInfoDunkel = new Style({ font: "28px Gothic", color: "black", horizontal: "left" });
 
 // Farbcode für die Zeile mit Linie und Gleis (Kürzel kommt vom Handy).
 // Farben aus der 64-Farben-Palette der Pebble.
@@ -137,14 +140,18 @@ function zeigeListe() {
 		const aktiv = (i === auswahl);
 		const sOben = aktiv ? sStartHell : sStart;
 		const sUnten = aktiv ? sZielHell : sZiel;
+		const breite = textBreite() - NUMMER_B;
 		app.add(new Container(null, {
 			left: 0, right: 0, top: (i - anfang) * ZEILE_H, height: ZEILE_H,
 			skin: aktiv ? schwarz : weiss,
 			contents: [
-				new Label(null, { left: 6, right: 6, top: 0, height: 28,
-					style: sOben, string: kuerze(start, sOben, textBreite()) }),
-				new Label(null, { left: 6, right: 6, top: 26, height: 22,
-					style: sUnten, string: kuerze("nach " + ziel, sUnten, textBreite()) })
+				// Nummer der Verbindung (1 bis 10), damit man sie schneller findet
+				new Label(null, { left: 6, top: 2, height: 34, width: NUMMER_B,
+					style: sOben, string: String(i + 1) }),
+				new Label(null, { left: 6 + NUMMER_B, right: 6, top: 2, height: 34,
+					style: sOben, string: kuerze(start, sOben, breite) }),
+				new Label(null, { left: 6 + NUMMER_B, right: 6, top: 36, height: 30,
+					style: sUnten, string: kuerze("nach " + ziel, sUnten, breite) })
 			]
 		}));
 	}
@@ -155,11 +162,12 @@ function zeigeDetailKopf(i) {
 	const [start, ziel] = teile(namen[i]);
 	app.empty();
 	app.add(new Container(null, {
-		left: 0, right: 0, top: 0, height: 46, skin: schwarz,
+		left: 0, right: 0, top: 0, height: KOPF_H, skin: schwarz,
 		contents: [
-			new Label(null, { left: 6, right: 6, top: 2, height: 22, style: sKopfStart,
-				string: kuerze(start, sKopfStart, textBreite()) }),
-			new Label(null, { left: 6, right: 6, top: 22, height: 22, style: sKopfZiel,
+			// rechts bleibt Platz für die Uhrzeit (Issue #6)
+			new Label(null, { left: 6, right: 6 + UHR_B, top: 0, height: 28, style: sKopfStart,
+				string: kuerze(start, sKopfStart, textBreite() - UHR_B) }),
+			new Label(null, { left: 6, right: 6, top: 28, height: 22, style: sKopfZiel,
 				string: kuerze("nach " + ziel, sKopfZiel, textBreite()) })
 		]
 	}));
@@ -174,25 +182,27 @@ function zeigeMeldung(text, oben = 0) {
 function oeffneDetail(i) {
 	ansicht = "detail";
 	zeigeDetailKopf(i);
-	zeigeMeldung("Lade...", 46);
+	zeigeMeldung("Lade...", KOPF_H);
 	frageFahrplan(i);
 }
 
 function zeigeFehler(text) {
 	zeigeDetailKopf(anfrage ?? auswahl);
-	zeigeMeldung(text, 46);
+	zeigeMeldung(text, KOPF_H);
 	anfrage = null;
 }
 
 function zeigeFahrten(fahrten) {
 	zeigeDetailKopf(anfrage);
 	anfrage = null;
-	fahrten.forEach((f, n) => {
+	// Nur 2 Abfahrten passen auf den Bildschirm (mehr per Scrollen: Issue #7)
+	fahrten.slice(0, 2).forEach((f, n) => {
+		const zeitBreite = sZeit.measure(f.ab).width;
 		const inhalt = [
-			new Label(null, { left: 6, top: 0, height: 26, width: 60, style: sZeit, string: f.ab })
+			new Label(null, { left: 6, top: 0, height: 44, width: zeitBreite, style: sZeit, string: f.ab })
 		];
 		if (f.plus > 0) {
-			inhalt.push(new Label(null, { left: 66, top: 0, height: 26, width: 60,
+			inhalt.push(new Label(null, { left: 6 + zeitBreite + 8, right: 6, top: 0, height: 44,
 				style: sPlus, string: "+" + f.plus }));
 		}
 		// Zeile mit Linie und Gleis, Hintergrund je nach Verkehrsart
@@ -201,15 +211,15 @@ function zeigeFahrten(fahrten) {
 		const ort = (f.art === "B") ? "Steig" : "Gleis";
 		const info = f.linie + (f.gleis ? "   " + ort + " " + f.gleis : "");
 		inhalt.push(new Container(null, {
-			left: 0, right: 0, top: 26, height: 28, skin: farbe.skin,
+			left: 0, right: 0, top: 44, height: 36, skin: farbe.skin,
 			contents: [
-				new Label(null, { left: 6, right: 6, top: 0, height: 28, style: farbe.style,
+				new Label(null, { left: 6, right: 6, top: 0, height: 36, style: farbe.style,
 					string: kuerze(info, farbe.style, textBreite()) })
 			]
 		}));
 
 		app.add(new Container(null, {
-			left: 0, right: 0, top: 50 + n * FAHRT_H, height: FAHRT_H,
+			left: 0, right: 0, top: KOPF_H + 2 + n * FAHRT_H, height: FAHRT_H,
 			contents: inhalt
 		}));
 	});
