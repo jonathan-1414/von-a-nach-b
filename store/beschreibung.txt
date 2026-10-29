@@ -1,0 +1,30 @@
+=== Beschreibung ===
+
+Von A nach B – Abfahrtsmonitor für Direktverbindungen
+
+Ein Abfahrtsmonitor für Direktverbindungen, unabhängig vom aktuellen Standort. Bei großen Bahnhöfen lassen sich so genau die Verbindungen herausfiltern, die man benötigt.
+
+Für gespeicherte Verbindungen zeigt die App die nächsten fünf Abfahrten mit Echtzeitdaten: Abfahrtszeit, Verspätung, Linie und Gleis.
+
+So funktioniert's:
+- In den Einstellungen bis zu 10 Verbindungen eintragen, z. B. „Köln Hbf“ → „Köln Mülheim“. Nach dem Speichern wird angezeigt, welche Haltestellen gefunden wurden.
+- Auf der Uhr eine Verbindung wählen und mit der mittleren Taste öffnen.
+- Hoch/Runter blättert durch die Abfahrten, die mittlere Taste aktualisiert.
+
+Auf einen Blick:
+- Verspätung grün bis +4, rot ab +5 Minuten, ohne Echtzeit „lt. Fahrplan“
+- Linie und Gleis farbig nach Verkehrsart: S-Bahn, Bus, U-Bahn, Tram, Zug
+- Nur Verbindungen ohne Umstieg, mit höchstens 5 Minuten Fußweg
+
+Fahrplandaten: Transitous (transitous.org), Kartendaten © OpenStreetMap-Mitwirkende.
+Quellcode: https://github.com/jonathan-1414/von-a-nach-b
+
+
+=== Versionshinweise 0.2.0 ===
+
+- Fünf statt drei Abfahrten, mit Hoch/Runter blättern
+- Uhrzeit oben in der Detailansicht
+- Verspätung farbig: grün bis +4, rot ab +5, sonst „lt. Fahrplan“
+- Größere Schrift
+- Fußwege höchstens 5 Minuten, Abfahrten nur in den nächsten 20 Stunden
+- Absturzfehler behoben

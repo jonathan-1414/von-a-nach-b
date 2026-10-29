@@ -1,25 +1,33 @@
 # Von A nach B
 
-Ein Abfahrtsmonitor für Direktverbindungen, unabhängig vom aktuellen Standort. Über die App lassen
-sich z. B. bei großen Bahnhöfen genau die Verbindungen herausfiltern, die man benötigt.
+Ein Abfahrtsmonitor für Direktverbindungen, unabhängig vom aktuellen Standort. Bei großen Bahnhöfen
+lassen sich so genau die Verbindungen herausfiltern, die man benötigt.
 
 Pebble-App für die **Pebble Time 2** (Plattform `emery`). Sie zeigt für gespeicherte Bahnverbindungen
-die nächsten drei Abfahrten mit Echtzeitdaten: Abfahrtszeit, Verspätung, Linie und Gleis.
+die nächsten fünf Abfahrten mit Echtzeitdaten: Abfahrtszeit, Verspätung, Linie und Gleis.
 Die Fahrplandaten kommen von [Transitous](https://transitous.org)
 ([Datenquellen](https://transitous.org/sources/), Kartendaten © OpenStreetMap-Mitwirkende).
 
-![Liste der Verbindungen](screenshots/emery_liste.png) ![Detailansicht Köln Hbf nach Köln-Mülheim](screenshots/emery_detail.png)
+![Liste der Verbindungen](screenshots/emery_liste.png) ![Detailansicht Dortmund Hbf nach Bochum Hbf](screenshots/emery_detail.png)
 
 ## Bedienung
 
 - **Einstellungen** (in der Pebble-App auf dem Handy): bis zu 10 Verbindungen als Freitext eintragen,
   z. B. „Köln Hbf“ → „Köln Mülheim“. Nach dem Speichern steht dort, welche Haltestellen gefunden
-  wurden. Es werden nur Verbindungen **ohne Umstieg** gesucht.
-- **Liste** (Uhr): Hoch/Runter wählt eine Verbindung, die mittlere Taste öffnet sie.
-- **Detailansicht**: die nächsten drei Abfahrten. Die mittlere Taste aktualisiert, Zurück führt zur Liste.
+  wurden. Es werden nur Verbindungen **ohne Umstieg** gesucht, mit höchstens 5 Minuten Fußweg
+  vor und nach der Fahrt.
+- **Liste** (Uhr): Hoch/Runter wählt eine Verbindung (am Ende geht es oben weiter), die mittlere
+  Taste öffnet sie.
+- **Detailansicht**: oben Start, Ziel und Uhrzeit, darunter die nächsten fünf Abfahrten innerhalb
+  von 20 Stunden, zwei pro Bildschirm. Hoch/Runter blättert, die Laufleiste rechts zeigt die
+  Position. Die mittlere Taste aktualisiert, Zurück führt zur Liste.
+
+Die Verspätung steht neben der Abfahrtszeit: grün bis +4, rot ab +5 Minuten. Ohne Echtzeitdaten
+steht dort grau „lt. Fahrplan“.
 
 Die Zeile mit Linie und Gleis ist nach Verkehrsart eingefärbt:
-S-Bahn grün, Bus violett, U-Bahn blau, Tram gelb, andere Züge rot.
+S-Bahn grün, Bus violett, U-Bahn blau, Tram gelb, andere Züge rot. Bei Bussen heißt es „Steig“
+statt „Gleis“.
 
 ## Wie es funktioniert
 
@@ -30,7 +38,7 @@ Die Uhr zeigt nur an, alle Netzwerkzugriffe macht das Handy.
    (zusätzlich bei jedem App-Start). Die Uhr speichert sie, damit die Liste auch ohne Handy
    sofort erscheint.
 2. **Auswahl einer Verbindung:** Die Uhr fragt beim Handy an. Das Handy ruft Transitous (`plan`) ab
-   und schickt ein kleines Paket mit den drei nächsten Abfahrten zurück.
+   und schickt ein kleines Paket mit den fünf nächsten Abfahrten zurück.
 3. **Fehler** werden auf der Uhr angezeigt: kein Handy verbunden, kein Netz, keine Verbindung gefunden.
 
 | Teil | Technik | Ort |
@@ -47,6 +55,10 @@ pebble install --emulator emery --logs     # im Emulator
 pebble emu-app-config --emulator emery     # Einstellungen im Emulator öffnen
 pebble install --phone <IP> --logs         # auf die Uhr (Entwicklerverbindung in der Pebble-App)
 ```
+
+## Änderungen
+
+Siehe [CHANGELOG.md](CHANGELOG.md).
 
 ## Lizenz
 
