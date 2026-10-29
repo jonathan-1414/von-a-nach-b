@@ -12,7 +12,7 @@ function baueConfig(gefunden) {
     {
       type: 'text',
       defaultValue: 'Bis zu 10 Verbindungen ohne Umstieg. ' +
-        'Start und Ziel als Freitext, z. B. „Essen Hbf“. ' +
+        'Start und Ziel als Freitext, z. B. „Köln Hbf“. ' +
         'Nach dem Speichern steht hier, welche Haltestelle gefunden wurde.'
     }
   ];
