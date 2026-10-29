@@ -7,9 +7,9 @@ import Message from "pebble/message";
 // ---------- Aussehen ----------
 
 const ZEILE_H = 76;      // Höhe einer Verbindung in der Liste (3 pro Bildschirm)
-const KOPF_H = 59;       // Höhe des Kopfes in der Detailansicht: so endet die 2. Abfahrt genau unten (Issue #17)
-const KOPF_OBEN = 4;     // Abstand der Kopf-Texte vom oberen Rand, damit sie mittig sitzen
-const FAHRT_H = 87;      // Höhe einer Abfahrt in der Detailansicht
+const KOPF_H = 64;       // Höhe des Kopfes in der Detailansicht: so endet die 2. Abfahrt genau unten (Issue #17)
+const KOPF_OBEN = 0;     // Abstand der Kopf-Texte vom oberen Rand, damit sie mittig sitzen
+const FAHRT_H = 82;      // Höhe einer Abfahrt in der Detailansicht: 80 Inhalt + 2 Abstand, wie über der 1. Abfahrt
 const FAHRTEN_SICHTBAR = 2;  // so viele Abfahrten passen auf den Bildschirm
 const LEISTE_B = 6;      // Breite der Laufleiste rechts in der Detailansicht (Issue #16)
 const UHR_B = 60;        // Platz rechts im Kopf für die Uhrzeit (Issue #6)
@@ -22,9 +22,9 @@ const sStart = new Style({ font: "bold 28px Gothic", color: "black", horizontal:
 const sZiel = new Style({ font: "24px Gothic", color: "black", horizontal: "left" });
 const sStartHell = new Style({ font: "bold 28px Gothic", color: "white", horizontal: "left" });
 const sZielHell = new Style({ font: "24px Gothic", color: "white", horizontal: "left" });
-const sKopfStart = new Style({ font: "bold 24px Gothic", color: "white", horizontal: "left" });
-const sKopfZiel = new Style({ font: "18px Gothic", color: "white", horizontal: "left" });
-const sKopfUhr = new Style({ font: "bold 24px Gothic", color: "white", horizontal: "right" });
+const sKopfStart = new Style({ font: "bold 28px Gothic", color: "white", horizontal: "left" });
+const sKopfZiel = new Style({ font: "24px Gothic", color: "white", horizontal: "left" });
+const sKopfUhr = new Style({ font: "bold 28px Gothic", color: "white", horizontal: "right" });
 const sZeit = new Style({ font: "bold 36px Gothic", color: "black", horizontal: "left" });
 const sPlus = new Style({ font: "bold 36px Gothic", color: "red", horizontal: "left" });      // ab +5
 const sPuenktlich = new Style({ font: "bold 36px Gothic", color: "#00AA00", horizontal: "left" }); // +0 bis +4
@@ -197,16 +197,16 @@ function zeigeDetailKopf(i) {
 	const [start, ziel] = teile(namen[i]);
 	app.empty();
 	// Uhrzeit oben rechts, läuft über "minutechange" mit (Issue #6)
-	uhrLabel = new Label(null, { right: 6, width: UHR_B, top: KOPF_OBEN, height: 28, style: sKopfUhr,
+	uhrLabel = new Label(null, { right: 6, width: UHR_B, top: KOPF_OBEN, height: 34, style: sKopfUhr,
 		string: uhrzeit });
 	app.add(new Container(null, {
 		left: 0, right: 0, top: 0, height: KOPF_H, skin: schwarz,
 		contents: [
 			// rechts bleibt Platz für die Uhrzeit
-			new Label(null, { left: 6, right: 6 + UHR_B, top: KOPF_OBEN, height: 28, style: sKopfStart,
+			new Label(null, { left: 6, right: 6 + UHR_B, top: KOPF_OBEN, height: 34, style: sKopfStart,
 				string: kuerze(start, sKopfStart, textBreite() - UHR_B) }),
 			uhrLabel,
-			new Label(null, { left: 6, right: 6, top: KOPF_OBEN + 28, height: 22, style: sKopfZiel,
+			new Label(null, { left: 6, right: 6, top: KOPF_OBEN + 32, height: 30, style: sKopfZiel,
 				string: kuerze("» " + ziel, sKopfZiel, textBreite()) })
 		]
 	}));
